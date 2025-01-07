@@ -50,16 +50,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSet }) => {
 
   return (
     <div
-      className="flex h-full flex-col items-center justify-center gap-6 rounded-lg border-2 border-dashed border-gray-700 p-8 text-center"
-      tabIndex={0}
-    >
-      <Upload className="h-24 w-24 text-gray-500" />
+  className="flex flex-col items-center justify-center gap-6 rounded-lg border-2 border-dashed border-gray-700 p-8 text-center max-w-full mx-auto h-[70vh]"
+  tabIndex={0}
+>
+      <Upload className="h-[10vh] w-24 text-gray-500" />
       <div className="space-y-4">
-        <p className="text-lg font-medium">Drop an image here</p>
-        <p className="text-sm text-gray-400">or paste from clipboard</p>
+        <p className="text-lg font-medium"> أسقط الصور هنا Drop an image here</p>
+        <p className="text-sm text-gray-400">أو قم باللصق من الحافظة or paste from clipboard</p>
         <div className="flex gap-3 flex-wrap justify-center">
           <label className="inline-block cursor-pointer rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700">
-            Choose File
+            إختر الملف Choose File
             <input
               type="file"
               className="hidden"
@@ -72,7 +72,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSet }) => {
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 flex items-center gap-2"
           >
             <Clipboard className="h-4 w-4" />
-            Paste from Clipboard
+            لصق Paste from Clipboard
           </button>
         </div>
       </div>

@@ -23,9 +23,9 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
   onGradientPositionChange,
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="relative h-full w-full space-y-4 flex flex-col justify-center min-h-screen">
       <DragDropZone onImageSet={onImageSet}>
-        <div className="relative min-h-[500px] rounded-lg bg-gray-800 p-4">
+        <div className="relative min-h-[500px] rounded-lg bg-gray-800 p-4 justify-center">
           {!image && <ImageUpload onImageSet={onImageSet} />}
           {image && (
             <div className="relative h-full w-full">
