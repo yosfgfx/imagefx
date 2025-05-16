@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مصمم برو</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Alexandria', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .card {
+            background-color: #2d2d2d;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .filter-group label {
+            font-weight: bold;
+        }
+        
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: #1f1f1f;
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            right: 0;
+            top: 0;
+            overflow-y: auto;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+        
+        .sidebar.hidden {
+            transform: translateX(250px);
+        }
+        
+        .sidebar-toggle {
+            position: fixed;
+            right: 250px;
+            top: 20px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px 0 0 5px;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 101;
+            transition: right 0.3s ease;
+        }
+        
+        .sidebar-toggle.hidden {
+            right: 0;
+        }
+        
+        .main-content {
+            margin-right: 270px;
+            padding: 20px;
+            transition: margin-right 0.3s ease;
+        }
+        
+        .main-content.full {
+            margin-right: 20px;
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .toolbar h1 {
+            font-size: 1.8rem;
+        }
+        
+        .file-upload {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .thumbnail {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        
+        .active-thumbnail {
+            border: 3px solid #3b82f6;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #374151;
+        }
+        
+        .tab.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .output-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .output-image {
+            border: 2px solid #374151;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .output-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        #editCanvas {
+            border: 2px solid #374151;
+            cursor: crosshair;
+        }
+        
+        .shortcut-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(45, 45, 45, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 50;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary.active {
+            background-color: #3b82f6;
+        }
+        
+        kbd {
+            background-color: #374151;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <button id="sidebarToggle" class="sidebar-toggle" title="تبديل الشريط الجانبي">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+    </button>
+
+    <div class="sidebar" id="sidebar">
+        <h2 class="text-xl font-bold mb-4">الصور المحملة</h2>
+        <div id="thumbnailsContainer">
+            <!-- Image thumbnails will appear here -->
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="toolbar">
+            <h1>مصمم برو</h1>
+            <div class="file-upload">
+                <input type="file" id="imageUpload" accept="image/*" multiple>
+                <label for="imageUpload" class="btn btn-primary">رفع صور</label>
+                <button id="pasteBtn" class="btn btn-secondary">لصق من الحافظة</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="edit">تعديل</div>
+            <div class="tab" data-tab="filters">الفلاتر</div>
+            <div class="tab" data-tab="batch">معالجة دفعة</div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="editCanvas" width="800" height="600"></canvas>
+        </div>
+
+        <div class="tab-content" id="editTab">
+            <div class="controls">
+                <div class="card">
+                    <h2 class="text-xl font-bold mb-4">الشفافية</h2>
+                    <div class="filter-group">
+                        <label for="transparencyLevel">مستوى الشفافية</label>
+                        <input type="range" id="transparencyLevel" min="0" max="1" step="0.01" value="1">
+                        <span>القيمة: <span id="transparencyValue">1</span></span>
+                    </div>
+                    <div class="filter-group">
+                        <label for="transparencyDirection">اتجاه الشفافية</label>
+                        <select id="transparencyDirection">
+                            <option value="top">من الأعلى</option>
+                            <option value="bottom">من الأسفل</option>
+                            <option value="left">من اليسار</option>
+                            <option value="right">من اليمين</option>
+                            <option value="top-left">من الأعلى اليسار</option>
+                            <option value="top-right">من الأعلى اليمين</option>
+                            <option value="bottom-left">من الأسفل اليسار</option>
+                            <option value="bottom-right">من الأسفل اليمين</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="angle">الزاوية</label>
+                        <input type="range" id="angle" min="0" max="360" value="0">
+                        <span>الزاوية: <span id="angleValue">0</span>°</span>
+                    </div>
+                    <button class="btn btn-primary mt-4" id="applyTransparencyBtn">تطبيق الشفافية</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-xl font-bold mb-4">التمويه (Blur)</h2>
+                    <div class="filter-group">
+                        <label for="blurStrength">قوة التمويه</label>
+                        <input type="range" id="blurStrength" min="0" max="10" step="0.1" value="0">
+                        <span>القيمة: <span id="blurValue">0</span>px</span>
+                    </div>
+                    <div class="filter-group">
+                        <label for="blurDirection">اتجاه التمويه</label>
+                        <select id="blurDirection">
+                            <option value="all">كل الاتجاهات</option>
+                            <option value="horizontal">أفقي</option>
+                            <option value="vertical">رأسي</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary mt-4" id="applyBlurBtn">تطبيق التمويه</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-xl font-bold mb-4">Glassmorphism</h2>
+                    <div class="filter-group">
+                        <label for="glassBlur">تمويه الزجاج</label>
+                        <input type="range" id="glassBlur" min="0" max="20" value="10">
+                        <span>القيمة: <span id="glassBlurValue">10</span>px</span>
+                    </div>
+                    <div class="filter-group">
+                        <label for="glassOpacity">شفافية الزجاج</label>
+                        <input type="range" id="glassOpacity" min="0" max="1" step="0.01" value="0.3">
+                        <span>القيمة: <span id="glassOpacityValue">0.3</span></span>
+                    </div>
+                    <div class="filter-group">
+                        <label for="glassBorder">إطار الزجاج</label>
+                        <input type="range" id="glassBorder" min="0" max="5" value="1">
+                        <span>القيمة: <span id="glassBorderValue">1</span>px</span>
+                    </div>
+                    <button class="btn btn-primary mt-4" id="applyGlassmorphismBtn">تطبيق Glassmorphism</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content hidden" id="filtersTab">
+            <div class="controls">
+                <div class="card">
+                    <h2 class="text-xl font-bold mb-4">فلاتر التصميم</h2>
+                    <div class="filter-group">
+                        <label>فلاتر شائعة</label>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="btn btn-secondary filter-btn" data-filter="grayscale">تدرج رمادي</button>
+                            <button class="btn btn-secondary filter-btn" data-filter="sepia">سبيا</button>
+                            <button class="btn btn-secondary filter-btn" data-filter="invert">عكس الألوان</button>
+                            <button class="btn btn-secondary filter-btn" data-filter="saturate">تشبع الألوان</button>
+                            <button class="btn btn-secondary filter-btn" data-filter="contrast">التباين</button>
+                            <button class="btn btn-secondary filter-btn" data-filter="brightness">السطوع</button>
+                            <button class="btn btn-secondary filter-btn" data-filter="hue-rotate">دوران الألوان</button>
+                            <button class="btn btn-secondary filter-btn" data-filter="drop-shadow">ظل متدلي</button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="customFilter">فلتر مخصص (CSS)</label>
+                        <input type="text" id="customFilter" class="w-full p-2 rounded bg-gray-800 text-white" placeholder="أدخل الفلتر كـ CSS filter property...">
+                        <button class="btn btn-primary mt-2" id="applyCustomFilterBtn">تطبيق الفلتر المخصص</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content hidden" id="batchTab">
+            <div class="card">
+                <h2 class="text-xl font-bold mb-4">معالجة دفعة الصور</h2>
+                <div class="filter-group">
+                    <label for="batchFilters">اختر الفلاتر للتطبيق على جميع الصور</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="btn btn-secondary batch-filter-btn" data-filter="grayscale">تدرج رمادي</button>
+                        <button class="btn btn-secondary batch-filter-btn" data-filter="sepia">سبيا</button>
+                        <button class="btn btn-secondary batch-filter-btn" data-filter="invert">عكس الألوان</button>
+                        <button class="btn btn-secondary batch-filter-btn" data-filter="saturate">تشبع الألوان</button>
+                        <button class="btn btn-secondary batch-filter-btn" data-filter="contrast">التباين</button>
+                        <button class="btn btn-secondary batch-filter-btn" data-filter="brightness">السطوع</button>
+                        <button class="btn btn-secondary batch-filter-btn" data-filter="hue-rotate">دوران الألوان</button>
+                        <button class="btn btn-secondary batch-filter-btn" data-filter="transparency">الشفافية</button>
+                        <button class="btn btn-secondary batch-filter-btn" data-filter="blur">التمويه</button>
+                        <button class="btn btn-secondary batch-filter-btn" data-filter="glassmorphism">Glassmorphism</button>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button class="btn btn-primary" id="applyBatchFiltersBtn">تطبيق الفلاتر على جميع الصور</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <h2 class="text-2xl font-bold mb-4">المخرجات</h2>
+            <div class="output-container" id="outputContainer">
+                <!-- Processed images will appear here -->
+            </div>
+        </div>
+
+        <div class="shortcut-hint">
+            <p>اختصارات لوحة المفاتيح:</p>
+            <p><kbd>Ctrl</kbd> + <kbd>Z</kbd> تراجع | <kbd>Ctrl</kbd> + <kbd>Y</kbd> إعادة | <kbd>Ctrl</kbd> + <kbd>S</kbd> حفظ</p>
+            <p><kbd>Ctrl</kbd> + <kbd>C</kbd> نسخ | <kbd>Ctrl</kbd> + <kbd>V</kbd> لصق | <kbd>Esc</kbd> إلغاء</p>
+        </div>
+    </div>
+
+    <script>
+        const images = [];
+        let activeImageIndex = -1;
+        let undoStack = [];
+        let redoStack = [];
+        let isDragging = false;
+        let lastX = 0;
+        let lastY = 0;
+        let ctx;
+        let canvas;
+        let currentTool = 'brush';
+        
+        // تهيئة المتغيرات والأحداث عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', init);
+
+        function init() {
+            // إعداد عناصر واجهة المستخدم
+            setupUI();
+            // إعداد اللوحة
+            setupCanvas();
+            // إعداد اختصارات لوحة المفاتيح
+            setupKeyboardShortcuts();
+            // عرض علامة التبويب "تعديل" افتراضيًا
+            document.getElementById('editTab').classList.remove('hidden');
+        }
+
+        function setupUI() {
+            // أحداث رفع الصور ولصقها
+            document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
+            document.getElementById('pasteBtn').addEventListener('click', handlePaste);
+            
+            // أحداث علامات التبويب
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    
+                    const target = tab.getAttribute('data-tab');
+                    document.getElementById(`${target}Tab`).classList.remove('hidden');
+                    tab.classList.add('active');
+                });
+            });
+            
+            // أحداث أشرطة التمرير
+            setupRangeInputs();
+            
+            // زر تبديل الشريط الجانبي
+            document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+            
+            // أزرار تطبيق التأثيرات
+            document.getElementById('applyTransparencyBtn').addEventListener('click', applyTransparency);
+            document.getElementById('applyBlurBtn').addEventListener('click', applyBlur);
+            document.getElementById('applyGlassmorphismBtn').addEventListener('click', applyGlassmorphism);
+            document.getElementById('applyCustomFilterBtn').addEventListener('click', applyCustomFilter);
+            document.getElementById('applyBatchFiltersBtn').addEventListener('click', applyBatchFilters);
+            
+            // أزرار الفلاتر
+            document.querySelectorAll('.filter-btn').forEach(button => {
+                button.addEventListener('click', handleFilterButtonClick);
+            });
+            
+            // أزرار فلاتر الدفعة
+            document.querySelectorAll('.batch-filter-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    button.classList.toggle('active');
+                });
+            });
+        }
+
+        function setupRangeInputs() {
+            document.getElementById('transparencyLevel').addEventListener('input', () => {
+                document.getElementById('transparencyValue').textContent = document.getElementById('transparencyLevel').value;
+                if (activeImageIndex !== -1) applyTransparency(true);
+            });
+            
+            document.getElementById('angle').addEventListener('input', () => {
+                document.getElementById('angleValue').textContent = document.getElementById('angle').value;
+                if (activeImageIndex !== -1) applyTransparency(true);
+            });
+            
+            document.getElementById('blurStrength').addEventListener('input', () => {
+                document.getElementById('blurValue').textContent = document.getElementById('blurStrength').value;
+                if (activeImageIndex !== -1) applyBlur(true);
+            });
+            
+            document.getElementById('glassBlur').addEventListener('input', () => {
+                document.getElementById('glassBlurValue').textContent = document.getElementById('glassBlur').value;
+                if (activeImageIndex !== -1) applyGlassmorphism(true);
+            });
+            
+            document.getElementById('glassOpacity').addEventListener('input', () => {
+                document.getElementById('glassOpacityValue').textContent = document.getElementById('glassOpacity').value;
+                if (activeImageIndex !== -1) applyGlassmorphism(true);
+            });
+            
+            document.getElementById('glassBorder').addEventListener('input', () => {
+                document.getElementById('glassBorderValue').textContent = document.getElementById('glassBorder').value;
+                if (activeImageIndex !== -1) applyGlassmorphism(true);
+            });
+        }
+
+        function setupCanvas() {
+            canvas = document.getElementById('editCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // أحداث الماوس للوحة
+            canvas.addEventListener('mousedown', startDrag);
+            canvas.addEventListener('mousemove', drag);
+            canvas.addEventListener('mouseup', endDrag);
+            canvas.addEventListener('mouseleave', endDrag);
+            
+            // تهيئة اللوحة بلون أسود
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Ctrl+Z: تراجع
+                if (e.ctrlKey && e.key === 'z') {
+                    e.preventDefault();
+                    undo();
+                }
+                
+                // Ctrl+Y: إعادة
+                if (e.ctrlKey && e.key === 'y') {
+                    e.preventDefault();
+                    redo();
+                }
+                
+                // Ctrl+S: حفظ
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    saveImage();
+                }
+                
+                // Ctrl+C: نسخ
+                if (e.ctrlKey && e.key === 'c') {
+                    e.preventDefault();
+                    copyImageToClipboard();
+                }
+                
+                // Ctrl+V: لصق
+                if (e.ctrlKey && e.key === 'v') {
+                    e.preventDefault();
+                    handlePaste();
+                }
+                
+                // Esc: إلغاء
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelCurrentOperation();
+                }
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            
+            sidebar.classList.toggle('hidden');
+            mainContent.classList.toggle('full');
+            toggleBtn.classList.toggle('hidden');
+        }
+        
+        function handleImageUpload(event) {
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        images.push(img);
+                        displayThumbnails();
+                        if (images.length === 1) {
+                            displayImage(0);
+                        }
+                    };
+                };
+                reader.readAsDataURL(files[i]);
+            }
+        }
+
+        function handlePaste() {
+            navigator.clipboard.read().then(data => {
+                for (const item of data) {
+                    if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
+                        item.getType('image/png').then(blob => {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const img = new Image();
+                                img.src = e.target.result;
+                                img.onload = function() {
+                                    images.push(img);
+                                    displayThumbnails();
+                                    if (images.length === 1) {
+                                        displayImage(0);
+                                    }
+                                };
+                            };
+                            reader.readAsDataURL(blob);
+                        });
+                    }
+                }
+            }).catch(err => {
+                alert('لا يمكن لصق الصور من الحافظة في هذا المتصفح.');
+            });
+        }
+
+        function displayThumbnails() {
+            const container = document.getElementById('thumbnailsContainer');
+            container.innerHTML = '';
+            
+            images.forEach((img, index) => {
+                const thumbnail = document.createElement('img');
+                thumbnail.src = img.src;
+                thumbnail.className = 'thumbnail';
+                thumbnail.addEventListener('click', () => displayImage(index));
+                if (index === activeImageIndex) {
+                    thumbnail.classList.add('active-thumbnail');
+                }
+                container.appendChild(thumbnail);
+            });
+        }
+
+        function displayImage(index) {
+            activeImageIndex = index;
+            displayThumbnails();
+            
+            // عرض الصورة على اللوحة
+            canvas.width = images[index].width;
+            canvas.height = images[index].height;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(images[index], 0, 0);
+            
+            // حفظ الحالة الأولية للتراجع
+            saveCanvasState();
+        }
+
+        function applyTransparency(preview = false) {
+            if (activeImageIndex === -1) return;
+            
+            if (!preview) saveCanvasState();
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            const transparencyLevel = parseFloat(document.getElementById('transparencyLevel').value);
+            const direction = document.getElementById('transparencyDirection').value;
+            const angle = parseFloat(document.getElementById('angle').value);
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const x = (i / 4) % canvas.width;
+                const y = Math.floor((i / 4) / canvas.width);
+                
+                let alpha = transparencyLevel;
+                
+                if (direction === 'top') {
+                    alpha = transparencyLevel * (y / canvas.height);
+                } else if (direction === 'bottom') {
+                    alpha = transparencyLevel * ((canvas.height - y) / canvas.height);
+                } else if (direction === 'left') {
+                    alpha = transparencyLevel * (x / canvas.width);
+                } else if (direction === 'right') {
+                    alpha = transparencyLevel * ((canvas.width - x) / canvas.width);
+                } else if (direction === 'top-left') {
+                    const distance = Math.sqrt((x / canvas.width) ** 2 + (y / canvas.height) ** 2) / Math.sqrt(2);
+                    alpha = transparencyLevel * distance;
+                } else if (direction === 'top-right') {
+                    const distance = Math.sqrt(((canvas.width - x) / canvas.width) ** 2 + (y / canvas.height) ** 2) / Math.sqrt(2);
+                    alpha = transparencyLevel * distance;
+                } else if (direction === 'bottom-left') {
+                    const distance = Math.sqrt((x / canvas.width) ** 2 + ((canvas.height - y) / canvas.height) ** 2) / Math.sqrt(2);
+                    alpha = transparencyLevel * distance;
+                } else if (direction === 'bottom-right') {
+                    const distance = Math.sqrt(((canvas.width - x) / canvas.width) ** 2 + ((canvas.height - y) / canvas.height) ** 2) / Math.sqrt(2);
+                    alpha = transparencyLevel * distance;
+                }
+                
+                if (angle !== 0) {
+                    const radians = angle * Math.PI / 180;
+                    const rotatedX = x * Math.cos(radians) - y * Math.sin(radians);
+                    const rotatedY = x * Math.sin(radians) + y * Math.cos(radians);
+                    
+                    alpha = transparencyLevel * (rotatedX + rotatedY) / (canvas.width + canvas.height);
+                }
+                
+                data[i + 3] = data[i + 3] * alpha;
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function applyBlur(preview = false) {
+            if (activeImageIndex === -1) return;
+            
+            if (!preview) saveCanvasState();
+            
+            const blurStrength = parseFloat(document.getElementById('blurStrength').value);
+            const direction = document.getElementById('blurDirection').value;
+            
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            if (direction === 'horizontal' || direction === 'all') {
+                tempCtx.filter = `blur(${blurStrength}px)`;
+                tempCtx.drawImage(tempCanvas, 0, 0);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(tempCanvas, 0, 0);
+            }
+            
+            if (direction === 'vertical' || direction === 'all') {
+                tempCanvas.width = canvas.height;
+                tempCanvas.height = canvas.width;
+                
+                tempCtx.save();
+                tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
+                tempCtx.rotate(Math.PI / 2);
+                tempCtx.drawImage(canvas, -canvas.width / 2, -canvas.height / 2);
+                tempCtx.restore();
+                
+                tempCtx.filter = `blur(${blurStrength}px)`;
+                tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+                tempCtx.drawImage(tempCanvas, 0, 0);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.drawImage(tempCanvas, -tempCanvas.width / 2, -tempCanvas.height / 2);
+                ctx.restore();
+            }
+        }
+
+        function applyGlassmorphism(preview = false) {
+            if (activeImageIndex === -1) return;
+            
+            if (!preview) saveCanvasState();
+            
+            const glassBlur = parseInt(document.getElementById('glassBlur').value);
+            const glassOpacity = parseFloat(document.getElementById('glassOpacity').value);
+            const glassBorder = parseInt(document.getElementById('glassBorder').value);
+            
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            tempCtx.filter = `blur(${glassBlur}px)`;
+            tempCtx.drawImage(tempCanvas, 0, 0);
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(tempCanvas, 0, 0);
+            
+            ctx.fillStyle = `rgba(255, 255, 255, ${glassOpacity})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (glassBorder > 0) {
+                ctx.strokeStyle = `rgba(255, 255, 255, ${glassOpacity * 0.8})`;
+                ctx.lineWidth = glassBorder;
+                ctx.strokeRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function applyFilter(filterType, value = 1) {
+            if (activeImageIndex === -1) return;
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i];
+                let g = data[i + 1];
+                let b = data[i + 2];
+                
+                switch(filterType) {
+                    case 'grayscale':
+                        const gray = r * 0.3 + g * 0.59 + b * 0.11;
+                        data[i] = data[i + 1] = data[i + 2] = gray * value + data[i] * (1 - value);
+                        break;
+                    case 'sepia':
+                        const sepiaR = r * 0.393 + g * 0.769 + b * 0.189;
+                        const sepiaG = r * 0.349 + g * 0.686 + b * 0.168;
+                        const sepiaB = r * 0.272 + g * 0.534 + b * 0.131;
+                        data[i] = sepiaR * value + r * (1 - value);
+                        data[i + 1] = sepiaG * value + g * (1 - value);
+                        data[i + 2] = sepiaB * value + b * (1 - value);
+                        break;
+                    case 'invert':
+                        data[i] = 255 - r;
+                        data[i + 1] = 255 - g;
+                        data[i + 2] = 255 - b;
+                        break;
+                    case 'saturate':
+                        const avg = (r + g + b) / 3;
+                        data[i] = avg + (r - avg) * value;
+                        data[i + 1] = avg + (g - avg) * value;
+                        data[i + 2] = avg + (b - avg) * value;
+                        break;
+                    case 'contrast':
+                        data[i] = (r - 128) * value + 128;
+                        data[i + 1] = (g - 128) * value + 128;
+                        data[i + 2] = (b - 128) * value + 128;
+                        break;
+                    case 'brightness':
+                        data[i] = r * value;
+                        data[i + 1] = g * value;
+                        data[i + 2] = b * value;
+                        break;
+                    case 'hue-rotate':
+                        const angle = value * Math.PI / 180;
+                        const cosA = Math.cos(angle);
+                        const sinA = Math.sin(angle);
+                        
+                        let r1 = r * (0.213 + 0.787 * cosA + -0.213 * sinA);
+                        let g1 = r * (0.715 - 0.715 * cosA + -0.715 * sinA);
+                        let b1 = r * (0.072 - 0.072 * cosA + 0.928 * sinA);
+                        
+                        let r2 = g * (0.213 - 0.213 * cosA + 0.143 * sinA);
+                        let g2 = g * (0.715 + 0.285 * cosA + 0.140 * sinA);
+                        let b2 = g * (0.072 - 0.072 * cosA - 0.283 * sinA);
+                        
+                        let r3 = b * (0.213 - 0.213 * cosA - 0.787 * sinA);
+                        let g3 = b * (0.715 - 0.715 * cosA + 0.715 * sinA);
+                        let b3 = b * (0.072 + 0.928 * cosA + 0.072 * sinA);
+                        
+                        data[i] = r1 + g1 + b1;
+                        data[i + 1] = r2 + g2 + b2;
+                        data[i + 2] = r3 + g3 + b3;
+                        break;
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function applyDropShadowFilter() {
+            if (activeImageIndex === -1) return;
+            
+            saveCanvasState();
+            
+            const shadowCanvas = document.createElement('canvas');
+            const shadowCtx = shadowCanvas.getContext('2d');
+            
+            shadowCanvas.width = canvas.width + 20;
+            shadowCanvas.height = canvas.height + 20;
+            
+            shadowCtx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            shadowCtx.shadowBlur = 10;
+            shadowCtx.shadowOffsetX = 5;
+            shadowCtx.shadowOffsetY = 5;
+            
+            shadowCtx.drawImage(canvas, 10, 10);
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(shadowCanvas, -10, -10);
+        }
+
+        function applyCustomFilter() {
+            if (activeImageIndex === -1) return;
+            
+            saveCanvasState();
+            
+            const filterValue = document.getElementById('customFilter').value.trim();
+            if (!filterValue) return;
+            
+            if (filterValue.startsWith('grayscale(')) {
+                applyFilter('grayscale', parseFloat(filterValue.match(/grayscale\((\d+(\.\d+)?)\)/)[1]));
+            } else if (filterValue.startsWith('sepia(')) {
+                applyFilter('sepia', parseFloat(filterValue.match(/sepia\((\d+(\.\d+)?)\)/)[1]));
+            } else if (filterValue.startsWith('invert(')) {
+                applyFilter('invert', parseFloat(filterValue.match(/invert\((\d+(\.\d+)?)\)/)[1]));
+            } else if (filterValue.startsWith('saturate(')) {
+                applyFilter('saturate', parseFloat(filterValue.match(/saturate\((\d+(\.\d+)?)\)/)[1]));
+            } else if (filterValue.startsWith('contrast(')) {
+                applyFilter('contrast', parseFloat(filterValue.match(/contrast\((\d+(\.\d+)?)\)/)[1]));
+            } else if (filterValue.startsWith('brightness(')) {
+                applyFilter('brightness', parseFloat(filterValue.match(/brightness\((\d+(\.\d+)?)\)/)[1]));
+            } else if (filterValue.startsWith('hue-rotate(')) {
+                applyFilter('hue-rotate', parseFloat(filterValue.match(/hue-rotate\((\d+(\.\d+)?)\)/)[1]));
+            } else if (filterValue.startsWith('blur(')) {
+                const strength = parseFloat(filterValue.match(/blur\((\d+(\.\d+)?)\)/)[1]);
+                document.getElementById('blurStrength').value = strength;
+                document.getElementById('blurDirection').value = 'all';
+                applyBlur();
+                return;
+            } else {
+                alert('الفلتر غير مدعوم أو تم إدخاله بشكل خاطئ.');
+                return;
+            }
+        }
+
+        function applyBatchFilters() {
+            if (images.length === 0) return;
+            
+            const selectedFilters = Array.from(document.querySelectorAll('.batch-filter-btn.active'))
+                .map(btn => btn.getAttribute('data-filter'));
+            
+            if (selectedFilters.length === 0) {
+                alert('يرجى اختيار فلتر واحد على الأقل.');
+                return;
+            }
+            
+            const outputContainer = document.getElementById('outputContainer');
+            outputContainer.innerHTML = '';
+            
+            // حفظ حالة اللوحة الحالية
+            const currentState = activeImageIndex !== -1 ? ctx.getImageData(0, 0, canvas.width, canvas.height) : null;
+            
+            images.forEach((img, index) => {
+                // تطبيق الفلاتر المحددة على كل صورة
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                
+                selectedFilters.forEach(filter => {
+                    switch(filter) {
+                        case 'grayscale':
+                            applyFilter('grayscale');
+                            break;
+                        case 'sepia':
+                            applyFilter('sepia');
+                            break;
+                        case 'invert':
+                            applyFilter('invert');
+                            break;
+                        case 'saturate':
+                            applyFilter('saturate');
+                            break;
+                        case 'contrast':
+                            applyFilter('contrast');
+                            break;
+                        case 'brightness':
+                            applyFilter('brightness');
+                            break;
+                        case 'hue-rotate':
+                            applyFilter('hue-rotate');
+                            break;
+                        case 'transparency':
+                            document.getElementById('transparencyLevel').value = 0.5;
+                            document.getElementById('transparencyDirection').value = 'all';
+                            document.getElementById('angle').value = 0;
+                            applyTransparency(true);
+                            break;
+                        case 'blur':
+                            document.getElementById('blurStrength').value = 5;
+                            document.getElementById('blurDirection').value = 'all';
+                            applyBlur(true);
+                            break;
+                        case 'glassmorphism':
+                            document.getElementById('glassBlur').value = 10;
+                            document.getElementById('glassOpacity').value = 0.3;
+                            document.getElementById('glassBorder').value = 1;
+                            applyGlassmorphism(true);
+                            break;
+                    }
+                });
+                
+                // عرض الصورة المعالجة في قسم المخرجات
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'output-image';
+                
+                const resultImg = document.createElement('img');
+                resultImg.src = canvas.toDataURL();
+                resultImg.alt = `الصورة ${index + 1} بعد تطبيق الفلاتر`;
+                
+                imgContainer.appendChild(resultImg);
+                outputContainer.appendChild(imgContainer);
+            });
+            
+            // استعادة الصورة النشطة بعد معالجة الدفعة
+            if (currentState) {
+                canvas.width = currentState.width;
+                canvas.height = currentState.height;
+                ctx.putImageData(currentState, 0, 0);
+            }
+        }
+
+        function startDrag(e) {
+            saveCanvasState();
+            isDragging = true;
+            lastX = e.offsetX;
+            lastY = e.offsetY;
+        }
+        
+        function drag(e) {
+            if (!isDragging) return;
+            
+            const x = e.offsetX;
+            const y = e.offsetY;
+            
+            switch(currentTool) {
+                case 'brush':
+                    drawLine(lastX, lastY, x, y);
+                    break;
+                case 'eraser':
+                    erase(lastX, lastY, x, y);
+                    break;
+                case 'transparency':
+                    applyTransparencyAt(x, y);
+                    break;
+                case 'blur':
+                    applyBlurAt(x, y);
+                    break;
+            }
+            
+            lastX = x;
+            lastY = y;
+        }
+        
+        function endDrag() {
+            isDragging = false;
+        }
+        
+        function saveCanvasState() {
+            // حفظ حالة اللوحة الحالية للتراجع
+            undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+            // حذف سجل الإعادة عند إجراء تغيير جديد
+            redoStack = [];
+        }
+        
+        function undo() {
+            if (undoStack.length === 0) return;
+            
+            // حفظ الحالة الحالية للإعادة
+            redoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+            
+            // استعادة الحالة السابقة
+            const prevState = undoStack.pop();
+            ctx.putImageData(prevState, 0, 0);
+        }
+        
+        function redo() {
+            if (redoStack.length === 0) return;
+            
+            // حفظ الحالة الحالية للتراجع
+            undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+            
+            // استعادة الحالة التالية
+            const nextState = redoStack.pop();
+            ctx.putImageData(nextState, 0, 0);
+        }
+        
+        function drawLine(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#ffffff'; // لون الفرشاة
+            ctx.lineWidth = 5; // حجم الفرشاة
+            ctx.lineCap = 'round';
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+        
+        function erase(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#000000'; // لون الخلفية
+            ctx.lineWidth = 20; // حجم الممحاة
+            ctx.lineCap = 'round';
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+        
+        function applyTransparencyAt(x, y) {
+            const imageData = ctx.getImageData(x - 25, y - 25, 50, 50);
+            const data = imageData.data;
+            const transparencyLevel = parseFloat(document.getElementById('transparencyLevel').value);
+            
+            for (let i = 0; i < data.length; i += 4) {
+                data[i + 3] = data[i + 3] * transparencyLevel;
+            }
+            
+            ctx.putImageData(imageData, x - 25, y - 25);
+        }
+        
+        function applyBlurAt(x, y) {
+            // تطبيق تأثير تمويه باستخدام canvas مؤقت
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCanvas.width = 50;
+            tempCanvas.height = 50;
+            
+            // نسخ جزء من اللوحة الأصلية
+            tempCtx.drawImage(canvas, x - 25, y - 25, 50, 50, 0, 0, 50, 50);
+            
+            // تطبيق التمويه
+            const blurStrength = parseFloat(document.getElementById('blurStrength').value);
+            tempCtx.filter = `blur(${blurStrength}px)`;
+            tempCtx.drawImage(tempCanvas, 0, 0);
+            
+            // وضع النتيجة مرة أخرى على اللوحة الأصلية
+            ctx.drawImage(tempCanvas, 0, 0, 50, 50, x - 25, y - 25, 50, 50);
+        }
+        
+        function saveImage() {
+            const link = document.createElement('a');
+            link.download = 'edited-image.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        function copyImageToClipboard() {
+            canvas.toBlob(blob => {
+                try {
+                    const item = new ClipboardItem({ 'image/png': blob });
+                    navigator.clipboard.write([item]);
+                    alert('تم نسخ الصورة إلى الحافظة');
+                } catch (err) {
+                    alert('لا يمكن نسخ الصورة إلى الحافظة: ' + err);
+                }
+            });
+        }
+        
+        function cancelCurrentOperation() {
+            isDragging = false;
+            if (undoStack.length > 0) {
+                undo();
+            }
+        }
+
+        function handleFilterButtonClick() {
+            if (activeImageIndex === -1) return;
+            
+            const filterType = this.getAttribute('data-filter');
+            saveCanvasState();
+            
+            switch(filterType) {
+                case 'grayscale':
+                    applyFilter('grayscale');
+                    break;
+                case 'sepia':
+                    applyFilter('sepia');
+                    break;
+                case 'invert':
+                    applyFilter('invert');
+                    break;
+                case 'saturate':
+                    applyFilter('saturate');
+                    break;
+                case 'contrast':
+                    applyFilter('contrast');
+                    break;
+                case 'brightness':
+                    applyFilter('brightness');
+                    break;
+                case 'hue-rotate':
+                    applyFilter('hue-rotate');
+                    break;
+                case 'drop-shadow':
+                    applyDropShadowFilter();
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>

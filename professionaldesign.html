@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DesignCraft | Professional Design Toolkit for UI Designers</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/inter-ui@3.19.3/inter.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6C5CE7;
+            --primary-light: #8A7EFF;
+            --secondary: #00CEC9;
+            --dark-bg: #0F172A;
+            --dark-surface: #1E293B;
+            --dark-card: #334155;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 72px 1fr 300px;
+            grid-template-rows: 60px 1fr;
+            grid-template-areas:
+                "header header header"
+                "sidebar canvas properties";
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        .header {
+            grid-area: header;
+            background-color: var(--dark-surface);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 10;
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            background-color: var(--dark-surface);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 5;
+        }
+
+        .canvas-area {
+            grid-area: canvas;
+            background-color: var(--dark-bg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .properties-panel {
+            grid-area: properties;
+            background-color: var(--dark-surface);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-y: auto;
+            z-index: 5;
+        }
+
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .tool-btn:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .tool-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            background-color: var(--dark-card);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            padding: 8px 0;
+            min-width: 180px;
+            z-index: 100;
+            visibility: hidden;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-menu.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 8px 16px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dropdown-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .canvas-container {
+            background-color: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            margin: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider-container {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .slider-container input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 4px;
+            background: var(--dark-card);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .color-picker {
+            -webkit-appearance: none;
+            width: 40px;
+            height: 24px;
+            border: none;
+            border-radius: 4px;
+            background: none;
+            cursor: pointer;
+        }
+
+        .color-picker::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-picker::-webkit-color-swatch {
+            border: none;
+            border-radius: 4px;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-light);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .panel-section {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--dark-card);
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(16px);
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 2px;
+            background-color: var(--dark-card);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .dropdown-select {
+            width: 100%;
+            padding: 8px 12px;
+            background-color: var(--dark-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: var(--text-primary);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            cursor: pointer;
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 120px;
+            background-color: var(--dark-card);
+            color: var(--text-primary);
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .batch-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background-color: var(--dark-card);
+        }
+
+        .batch-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .batch-item-details {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--dark-card) transparent transparent transparent;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+
+        .paste-zone {
+            border: 2px dashed rgba(108, 92, 231, 0.4);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.2s ease;
+            background-color: rgba(108, 92, 231, 0.05);
+        }
+
+        .paste-zone:hover {
+            border-color: var(--primary);
+            background-color: rgba(108, 92, 231, 0.1);
+        }
+
+        .paste-zone i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+
+        .preset-item {
+            padding: 8px;
+            border-radius: 8px;
+            background-color: var(--dark-card);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .glassmorphism-preview {
+            height: 48px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .direction-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 4px;
+            width: 100px;
+            height: 100px;
+            margin: 10px auto;
+        }
+
+        .direction-cell {
+            background-color: var(--dark-card);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .direction-cell:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .direction-cell.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--dark-card);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--text-secondary);
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            height: calc(100vh - 100px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px;
+            background-color: var(--dark-card);
+            border-left: 4px solid var(--success);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification i {
+            font-size: 20px;
+            color: var(--success);
+        }
+
+        .effect-preview {
+            height: 120px;
+            border-radius: 8px;
+            background-color: var(--dark-card);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .effect-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background-color: var(--dark-card);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .layer-item-title {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .layer-item-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Grid background for canvas */
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: -1px -1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header flex items-center justify-between px-4">
+            <div class="flex items-center gap-4">
+                <div class="text-xl font-bold gradient-text">DesignCraft</div>
+                <div class="flex items-center border-l border-gray-700 ml-4 pl-4">
+                    <div class="tool-btn tooltip" onclick="toggleDropdown('fileMenu', this)">
+                        <i class="fas fa-file-alt"></i>
+                        <span class="tooltip-text">ملف
+                            <span class="tooltip-arrow"></span>
+                        </span>
+                    </div>
+                    <div class="tool-btn tooltip ml-2" onclick="toggleDropdown('editMenu', this)">
+                        <i class="fas fa-edit"></i>
+                        <span class="tooltip-text">تحرير
+                            <span class="tooltip-arrow"></span>
+                        </span>
+                    </div>
+                    <div class="tool-btn tooltip ml-2" onclick="toggleDropdown('viewMenu', this)">
+                        <i class="fas fa-eye"></i>
+                        <span class="tooltip-text">عرض
+                            <span class="tooltip-arrow"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="btn btn-outline text-sm" onclick="saveProject()">
+                    <i class="fas fa-save"></i>
+                    <span>حفظ</span>
+                </div>
+                <div class="btn btn-primary text-sm" onclick="shareProject()">
+                    <i class="fas fa-share-alt"></i>
+                    <span>مشاركة</span>
+                </div>
+                <div class="tool-btn ml-2 tooltip" onclick="showSettings()">
+                    <i class="fas fa-cog"></i>
+                    <span class="tooltip-text">إعدادات
+                        <span class="tooltip-arrow"></span>
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <div class="sidebar py-4 flex flex-col items-center">
+            <div class="tool-btn active tooltip mb-3" onclick="activateTool('effects')">
+                <i class="fas fa-magic"></i>
+                <span class="tooltip-text">مؤثرات
+                    <span class="tooltip-arrow"></span>
+                </span>
+            </div>
+            <div class="tool-btn tooltip mb-3" onclick="activateTool('crop')">
+                <i class="fas fa-crop-alt"></i>
+                <span class="tooltip-text">قص
+                    <span class="tooltip-arrow"></span>
+                </span>
+            </div>
+            <div class="tool-btn tooltip mb-3" onclick="activateTool('adjust')">
+                <i class="fas fa-adjust"></i>
+                <span class="tooltip-text">ضبط
+                    <span class="tooltip-arrow"></span>
+                </span>
+            </div>
+            <div class="tool-btn tooltip mb-3" onclick="activateTool('layers')">
+                <i class="fas fa-layer-group"></i>
+                <span class="tooltip-text">طبقات
+                    <span class="tooltip-arrow"></span>
+                </span>
+            </div>
+            <div class="tool-btn tooltip mb-3" onclick="activateTool('colors')">
+                <i class="fas fa-palette"></i>
+                <span class="tooltip-text">ألوان
+                    <span class="tooltip-arrow"></span>
+                </span>
+            </div>
+            <div class="tool-btn tooltip mb-3" onclick="activateTool('shapes')">
+                <i class="fas fa-shapes"></i>
+                <span class="tooltip-text">أشكال
+                    <span class="tooltip-arrow"></span>
+                </span>
+            </div>
+            <div class="tool-btn tooltip mb-3" onclick="activateTool('text')">
+                <i class="fas fa-font"></i>
+                <span class="tooltip-text">نص
+                    <span class="tooltip-arrow"></span>
+                </span>
+            </div>
+            <div class="tool-btn tooltip mb-3" onclick="activateTool('batch')">
+                <i class="fas fa-images"></i>
+                <span class="tooltip-text">معالجة دفعية
+                    <span class="tooltip-arrow"></span>
+                </span>
+            </div>
+            <div class="mt-auto">
+                <div class="tool-btn tooltip" onclick="showHelp()">
+                    <i class="fas fa-question-circle"></i>
+                    <span class="tooltip-text">مساعدة
+                        <span class="tooltip-arrow"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Canvas Area -->
+        <div class="canvas-area grid-bg">
+            <div class="canvas-wrapper">
+                <div id="paste-area" class="paste-zone">
+                    <i class="fas fa-paste"></i>
+                    <h3 class="text-lg font-semibold mb-2">الصق صورة أو اسحب وأفلت</h3>
+                    <p class="text-gray-400 text-sm mb-4">الصق من الحافظة (Ctrl+V/⌘+V) أو اسحب وأفلت الملفات</p>
+                    <div class="btn btn-outline text-sm" onclick="triggerImageUpload()">
+                        <i class="fas fa-upload"></i>
+                        <span>تحميل صورة</span>
+                    </div>
+                    <input type="file" id="file-upload" class="hidden" accept="image/*" multiple title="Upload Image">
+                </div>
+                <div id="canvas-container" class="canvas-container" style="display: none;">
+                    <canvas id="canvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Properties Panel -->
+        <div class="properties-panel">
+            <!-- Effect Controls -->
+            <div class="panel-section">
+                <div class="panel-header">
+                    <h3 class="font-semibold">المؤثرات</h3>
+                </div>
+                <div class="tab-container mb-4">
+                    <div class="tab active" onclick="switchTab('transparency')">شفافية</div>
+                    <div class="tab" onclick="switchTab('blur')">ضبابية</div>
+                    <div class="tab" onclick="switchTab('glass')">زجاج</div>
+                </div>
+
+                <!-- Transparency Tab -->
+                <div id="transparency-tab" class="tab-content">
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm text-gray-300">Transparency Amount</label>
+                            <span class="text-xs text-gray-400 tabular-nums" id="transparency-value">50%</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="0" max="100" value="50" id="transparency-slider" oninput="updateTransparency(this.value)" title="Transparency Amount">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="text-sm text-gray-300 block mb-2">Direction</label>
+                        <div class="direction-selector">
+                            <div class="direction-cell" data-direction="top-left"><i class="fas fa-arrow-up fa-rotate-315"></i></div>
+                            <div class="direction-cell" data-direction="top"><i class="fas fa-arrow-up"></i></div>
+                            <div class="direction-cell" data-direction="top-right"><i class="fas fa-arrow-up fa-rotate-45"></i></div>
+                            <div class="direction-cell" data-direction="left"><i class="fas fa-arrow-left"></i></div>
+                            <div class="direction-cell active" data-direction="center"><i class="fas fa-circle"></i></div>
+                            <div class="direction-cell" data-direction="right"><i class="fas fa-arrow-right"></i></div>
+                            <div class="direction-cell" data-direction="bottom-left"><i class="fas fa-arrow-down fa-rotate-45"></i></div>
+                            <div class="direction-cell" data-direction="bottom"><i class="fas fa-arrow-down"></i></div>
+                            <div class="direction-cell" data-direction="bottom-right"><i class="fas fa-arrow-down fa-rotate-315"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blur Tab -->
+                <div id="blur-tab" class="tab-content" style="display: none;">
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm text-gray-300">Blur Amount</label>
+                            <span class="text-xs text-gray-400 tabular-nums" id="blur-value">5px</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="0" max="50" value="5" id="blur-slider" oninput="updateBlur(this.value)">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="text-sm text-gray-300 block mb-2">Blur Type</label>
+                        <select class="dropdown-select">
+                            <option value="gaussian">Gaussian Blur</option>
+                            <option value="motion">Motion Blur</option>
+                            <option value="radial">Radial Blur</option>
+                            <option value="zoom">Zoom Blur</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm text-gray-300">Blur Focus</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Glassmorphism Tab -->
+                <div id="glass-tab" class="tab-content" style="display: none;">
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm text-gray-300">Blur Amount</label>
+                            <span class="text-xs text-gray-400 tabular-nums" id="glass-blur-value">10px</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="0" max="30" value="10" id="glass-blur-slider" oninput="updateGlassBlur(this.value)">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm text-gray-300">Opacity</label>
+                            <span class="text-xs text-gray-400 tabular-nums" id="glass-opacity-value">15%</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="0" max="40" value="15" id="glass-opacity-slider" oninput="updateGlassOpacity(this.value)">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-sm text-gray-300">Border</label>
+                            <span class="text-xs text-gray-400 tabular-nums" id="glass-border-value">1px</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="0" max="5" step="0.1" value="1" id="glass-border-slider" oninput="updateGlassBorder(this.value)">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="text-sm text-gray-300 block mb-2">Border Color</label>
+                        <div class="flex items-center">
+                            <input type="color" class="color-picker" value="#ffffff" id="glass-border-color">
+                            <span class="ml-2 text-sm text-gray-400">RGBA(255, 255, 255, 0.1)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="effect-preview glassmorphism-preview mb-4" id="glass-preview">
+                        <div class="absolute inset-0 flex items-center justify-center text-sm text-gray-300">Preview</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Presets Section -->
+            <div class="panel-section">
+                <div class="panel-header">
+                    <h3 class="font-semibold">UI Design Presets</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="preset-item" onclick="applyPreset('ios')">
+                        <div class="text-center p-2">
+                            <div class="h-12 mb-2 rounded-md" style="background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.15))"></div>
+                            <span class="text-xs">iOS Style</span>
+                        </div>
+                    </div>
+                    <div class="preset-item" onclick="applyPreset('material')">
+                        <div class="text-center p-2">
+                            <div class="h-12 mb-2 rounded-md shadow-lg" style="background: var(--primary)"></div>
+                            <span class="text-xs">Material</span>
+                        </div>
+                    </div>
+                    <div class="preset-item" onclick="applyPreset('glassmorphism')">
+                        <div class="text-center p-2">
+                            <div class="h-12 mb-2 rounded-md glassmorphism-preview"></div>
+                            <span class="text-xs">Glassmorphism</span>
+                        </div>
+                    </div>
+                    <div class="preset-item" onclick="applyPreset('neumorphism')">
+                        <div class="text-center p-2">
+                            <div class="h-12 mb-2 rounded-md" style="background: #2D3748; box-shadow: 8px 8px 16px #232a38, -8px -8px 16px #374458;"></div>
+                            <span class="text-xs">Neumorphism</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Processing Section -->
+            <div class="panel-section">
+                <div class="panel-header">
+                    <h3 class="font-semibold">Batch Processing</h3>
+                    <div class="btn btn-outline text-xs" onclick="showBatchPanel()">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </div>
+                <div class="mb-3 text-sm text-gray-400">Apply effects to multiple images at once</div>
+                <div id="batch-list">
+                    <div class="text-center text-gray-500 text-sm p-4">
+                        No images in batch queue
+                    </div>
+                </div>
+                <div class="mt-4 hidden" id="batch-actions">
+                    <div class="btn btn-primary w-full">
+                        <i class="fas fa-play"></i>
+                        <span>Process All Images</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layers Section -->
+            <div class="panel-section">
+                <div class="panel-header">
+                    <h3 class="font-semibold">Layers</h3>
+                </div>
+                <div id="layers-list">
+                    <div class="layer-item">
+                        <i class="fas fa-image text-gray-400"></i>
+                        <div class="layer-item-title">Image Layer</div>
+                        <div class="layer-item-controls">
+                            <div class="tool-btn w-6 h-6">
+                                <i class="fas fa-eye text-xs"></i>
+                            </div>
+                            <div class="tool-btn w-6 h-6">
+                                <i class="fas fa-lock-open text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layer-item">
+                        <i class="fas fa-layer-group text-gray-400"></i>
+                        <div class="layer-item-title">Effect Layer</div>
+                        <div class="layer-item-controls">
+                            <div class="tool-btn w-6 h-6">
+                                <i class="fas fa-eye text-xs"></i>
+                            </div>
+                            <div class="tool-btn w-6 h-6">
+                                <i class="fas fa-lock-open text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Options Section -->
+            <div class="panel-section">
+                <div class="panel-header">
+                    <h3 class="font-semibold">تصدير</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div class="btn btn-outline text-sm" onclick="exportImage('png')">
+                        <i class="fas fa-file-export"></i>
+                        <span>PNG</span>
+                    </div>
+                    <div class="btn btn-outline text-sm" onclick="exportImage('jpg')">
+                        <i class="fas fa-file-export"></i>
+                        <span>JPG</span>
+                    </div>
+                    <div class="btn btn-outline text-sm" onclick="exportImage('svg')">
+                        <i class="fas fa-file-export"></i>
+                        <span>SVG</span>
+                    </div>
+                    <div class="btn btn-outline text-sm" onclick="exportImage('webp')">
+                        <i class="fas fa-file-export"></i>
+                        <span>WebP</span>
+                    </div>
+                </div>
+                <div class="btn btn-primary w-full" onclick="copyToClipboard()">
+                    <i class="fas fa-clipboard"></i>
+                    <span>نسخ إلى الحافظة</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dropdown Menus -->
+        <div id="fileMenu" class="dropdown-menu">
+            <div class="dropdown-item" onclick="newProject()">
+                <i class="fas fa-plus"></i>
+                <span>مشروع جديد</span>
+            </div>
+            <div class="dropdown-item" onclick="openProject()">
+                <i class="fas fa-folder-open"></i>
+                <span>فتح...</span>
+            </div>
+            <div class="dropdown-item" onclick="saveProject()">
+                <i class="fas fa-save"></i>
+                <span>حفظ</span>
+            </div>
+            <div class="dropdown-item" onclick="exportProject()">
+                <i class="fas fa-file-export"></i>
+                <span>تصدير</span>
+            </div>
+            <hr class="my-1 border-gray-700">
+            <div class="dropdown-item" onclick="exitProject()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>خروج</span>
+            </div>
+        </div>
+        
+        <div id="editMenu" class="dropdown-menu">
+            <div class="dropdown-item" onclick="cutSelection()">
+                <i class="fas fa-cut"></i>
+                <span>قص</span>
+            </div>
+            <div class="dropdown-item" onclick="copySelection()">
+                <i class="fas fa-copy"></i>
+                <span>نسخ</span>
+            </div>
+            <div class="dropdown-item" onclick="pasteSelection()">
+                <i class="fas fa-paste"></i>
+                <span>لصق</span>
+            </div>
+            <hr class="my-1 border-gray-700">
+            <div class="dropdown-item" onclick="undoAction()">
+                <i class="fas fa-undo"></i>
+                <span>تراجع</span>
+            </div>
+            <div class="dropdown-item" onclick="redoAction()">
+                <i class="fas fa-redo"></i>
+                <span>إعادة</span>
+            </div>
+        </div>
+        
+        <div id="viewMenu" class="dropdown-menu">
+            <div class="dropdown-item" onclick="zoomIn()">
+                <i class="fas fa-search-plus"></i>
+                <span>تكبير</span>
+            </div>
+            <div class="dropdown-item" onclick="zoomOut()">
+                <i class="fas fa-search-minus"></i>
+                <span>تصغير</span>
+            </div>
+            <div class="dropdown-item" onclick="fitToScreen()">
+                <i class="fas fa-compress-arrows-alt"></i>
+                <span>ملائمة للشاشة</span>
+            </div>
+            <hr class="my-1 border-gray-700">
+            <div class="dropdown-item" onclick="toggleGrid()">
+                <i class="fas fa-th-large"></i>
+                <span>إظهار الشبكة</span>
+            </div>
+            <div class="dropdown-item" onclick="toggleRulers()">
+                <i class="fas fa-ruler-combined"></i>
+                <span>إظهار المساطر</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <div>
+            <div class="font-semibold">Success</div>
+            <div class="text-sm text-gray-300" id="notification-message">Operation completed successfully</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script>
+        // Global variables
+        let canvas;
+        let currentTab = 'transparency';
+        let fabricCanvas;
+        let currentImage = null;
+        let activeDropdown = null;
+        let activePreset = null;
+        let gridVisible = false;
+        let rulersVisible = false;
+        let undoStack = [];
+        let redoStack = [];
+        let zoomLevel = 1;
+        let activeToolType = 'effects';
+        let isGridShown = false;
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCanvas();
+            setupEventListeners();
+            setupDirectionSelectors();
+        });
+
+        // Initialize canvas
+        function initializeCanvas() {
+            fabricCanvas = new fabric.Canvas('canvas', {
+                width: 800,
+                height: 600,
+                backgroundColor: 'rgba(15, 23, 42, 1)'
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Listen for paste events
+            document.addEventListener('paste', handlePaste);
+            
+            // Add specific keyboard event support for macOS
+            document.addEventListener('keydown', function(e) {
+                // Check for Command+V (Mac paste)
+                if (e.metaKey && e.key === 'v') {
+                    // تنبيه المستخدم أن عليه الضغط على Cmd+V مرة أخرى (تقليد المتصفح)
+                    showNotification('يرجى الضغط على Cmd+V مرة أخرى لصق الصورة', 'info');
+                }
+            });
+            
+            // Listen for drag and drop events
+            const pasteArea = document.getElementById('paste-area');
+            pasteArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                pasteArea.classList.add('border-primary-500');
+                // إضافة أسلوب يدل على أن المنطقة نشطة للسحب والإفلات
+                pasteArea.style.backgroundColor = 'rgba(108, 92, 231, 0.15)';
+                pasteArea.style.transform = 'scale(1.02)';
+            });
+            
+            pasteArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                pasteArea.classList.remove('border-primary-500');
+                // إعادة المنطقة إلى أسلوبها الأصلي
+                pasteArea.style.backgroundColor = 'rgba(108, 92, 231, 0.05)';
+                pasteArea.style.transform = 'scale(1)';
+            });
+            
+            pasteArea.addEventListener('drop', handleDrop);
+            
+            // File upload
+            document.getElementById('file-upload').addEventListener('change', handleFileUpload);
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (activeDropdown && !e.target.closest('.tool-btn') && !e.target.closest('.dropdown-menu')) {
+                    document.getElementById(activeDropdown).classList.remove('show');
+                    activeDropdown = null;
+                }
+            });
+        }
+
+        // Setup direction selectors
+        function setupDirectionSelectors() {
+            const cells = document.querySelectorAll('.direction-cell');
+            cells.forEach(cell => {
+                cell.addEventListener('click', () => {
+                    cells.forEach(c => c.classList.remove('active'));
+                    cell.classList.add('active');
+                    applyDirectionEffect(cell.dataset.direction);
+                });
+            });
+        }
+
+        // Toggle dropdown menu
+        function toggleDropdown(menuId, element) {
+            const menu = document.getElementById(menuId);
+            
+            // Close any open dropdown
+            if (activeDropdown && activeDropdown !== menuId) {
+                document.getElementById(activeDropdown).classList.remove('show');
+            }
+            
+            // Toggle current dropdown
+            menu.classList.toggle('show');
+            
+            if (menu.classList.contains('show')) {
+                activeDropdown = menuId;
+                
+                // Position the dropdown
+                const rect = element.getBoundingClientRect();
+                menu.style.top = (rect.bottom + 5) + 'px';
+                menu.style.left = rect.left + 'px';
+            } else {
+                activeDropdown = null;
+            }
+        }
+
+        // Handle paste from clipboard
+        function handlePaste(e) {
+            if (e.clipboardData && e.clipboardData.items) {
+                const items = e.clipboardData.items;
+                
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(event) {
+                            loadImage(event.target.result);
+                        };
+                        
+                        reader.readAsDataURL(blob);
+                        return;
+                    }
+                }
+            }
+            
+            showNotification('No image found in clipboard', 'warning');
+        }
+
+        // Handle drag and drop
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // إزالة حالة التأثير البصري للمنطقة
+            const pasteArea = document.getElementById('paste-area');
+            pasteArea.classList.remove('border-primary-500');
+            
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const files = e.dataTransfer.files;
+                
+                if (files.length === 1) {
+                    // Single file upload
+                    const file = files[0];
+                    if (file.type.match('image.*')) {
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(event) {
+                            loadImage(event.target.result);
+                        };
+                        
+                        reader.readAsDataURL(file);
+                        showNotification('تم إسقاط الصورة بنجاح', 'success');
+                    } else {
+                        showNotification('الرجاء إسقاط ملف صورة صالح', 'warning');
+                    }
+                } else {
+                    // Multiple files - batch processing
+                    const batchList = document.getElementById('batch-list');
+                    batchList.innerHTML = '';
+                    let validImageCount = 0;
+                    
+                    for (let i = 0; i < files.length; i++) {
+                        if (files[i].type.match('image.*')) {
+                            const batchItem = createBatchItem(files[i]);
+                            batchList.appendChild(batchItem);
+                            validImageCount++;
+                        }
+                    }
+                    
+                    if (validImageCount > 0) {
+                        document.getElementById('batch-actions').classList.remove('hidden');
+                        showNotification(`تم إضافة ${validImageCount} صور إلى المجموعة`, 'success');
+                    } else {
+                        showNotification('لم يتم العثور على ملفات صور صالحة', 'warning');
+                    }
+                }
+            } else {
+                // Handle non-file drops (URLs, etc.)
+                const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+                if (url && url.match(/\.(jpeg|jpg|gif|png)$/i)) {
+                    fabric.Image.fromURL(url, function(img) {
+                        loadImage(url);
+                    }, { crossOrigin: 'anonymous' });
+                    showNotification('تم إسقاط رابط الصورة بنجاح', 'success');
+                } else if (url) {
+                    showNotification('الرابط المسقط ليس صورة', 'warning');
+                }
+            }
+        }
+
+        // Handle file upload
+        function handleFileUpload(e) {
+            if (e.target.files && e.target.files.length > 0) {
+                const files = e.target.files;
+                
+                if (files.length === 1) {
+                    // Single file upload
+                    const file = files[0];
+                    if (file.type.match('image.*')) {
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(event) {
+                            loadImage(event.target.result);
+                        };
+                        
+                        reader.readAsDataURL(file);
+                    }
+                } else {
+                    // Multiple files - batch processing
+                    const batchList = document.getElementById('batch-list');
+                    batchList.innerHTML = '';
+                    
+                    for (let i = 0; i < files.length; i++) {
+                        if (files[i].type.match('image.*')) {
+                            const batchItem = createBatchItem(files[i]);
+                            batchList.appendChild(batchItem);
+                        }
+                    }
+                    
+                    document.getElementById('batch-actions').classList.remove('hidden');
+                    showNotification(`${batchList.children.length} images added to batch`, 'success');
+                }
+            }
+        }
+
+        // Trigger file upload
+        function triggerImageUpload() {
+            document.getElementById('file-upload').click();
+            showNotification('اختر صورة للتحميل', 'info');
+        }
+
+        // Load image to canvas
+        function loadImage(imageUrl) {
+            fabric.Image.fromURL(imageUrl, function(img) {
+                // Clear canvas
+                fabricCanvas.clear();
+                
+                // Set image
+                currentImage = img;
+                
+                // Scale image to fit canvas while maintaining aspect ratio
+                const canvasWidth = fabricCanvas.width;
+                const canvasHeight = fabricCanvas.height;
+                const imgWidth = img.width;
+                const imgHeight = img.height;
+                
+                let scaleFactor = 1;
+                
+                if (imgWidth > canvasWidth || imgHeight > canvasHeight) {
+                    const scaleX = canvasWidth / imgWidth;
+                    const scaleY = canvasHeight / imgHeight;
+                    scaleFactor = Math.min(scaleX, scaleY) * 0.8;
+                }
+                
+                img.scale(scaleFactor);
+                img.set({
+                    left: (canvasWidth - imgWidth * scaleFactor) / 2,
+                    top: (canvasHeight - imgHeight * scaleFactor) / 2,
+                    selectable: true,
+                    hasControls: true
+                });
+                
+                fabricCanvas.add(img);
+                fabricCanvas.setActiveObject(img);
+                fabricCanvas.renderAll();
+                
+                // Show canvas and hide paste area
+                document.getElementById('paste-area').style.display = 'none';
+                document.getElementById('canvas-container').style.display = 'block';
+                
+                showNotification('Image loaded successfully', 'success');
+            });
+        }
+
+        // Create batch item
+        function createBatchItem(file) {
+            const div = document.createElement('div');
+            div.className = 'batch-item';
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                div.innerHTML = `
+                    <img src="${event.target.result}" alt="${file.name}">
+                    <div class="batch-item-details">
+                        <div class="text-sm text-gray-300">${file.name}</div>
+                        <div class="text-xs text-gray-500">${Math.round(file.size / 1024)} KB</div>
+                    </div>
+                    <div class="tool-btn w-6 h-6 flex-shrink-0">
+                        <i class="fas fa-times text-xs"></i>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+            
+            return div;
+        }
+
+        // Switch between tabs
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            // Update tab buttons
+            tabs.forEach(tab => {
+                if (tab.textContent.toLowerCase() === tabName) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Show selected tab content
+            tabContents.forEach(content => {
+                if (content.id === `${tabName}-tab`) {
+                    content.style.display = 'block';
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+            
+            currentTab = tabName;
+        }
+
+        // Update transparency
+        function updateTransparency(value) {
+            document.getElementById('transparency-value').textContent = `${value}%`;
+            
+            if (currentImage) {
+                currentImage.set('opacity', value / 100);
+                fabricCanvas.renderAll();
+            }
+        }
+
+        // Update blur
+        function updateBlur(value) {
+            document.getElementById('blur-value').textContent = `${value}px`;
+            
+            if (currentImage) {
+                const filter = new fabric.Image.filters.Blur({
+                    blur: value / 10
+                });
+                
+                currentImage.filters = currentImage.filters || [];
+                
+                // Remove existing blur filters
+                currentImage.filters = currentImage.filters.filter(filter => !(filter instanceof fabric.Image.filters.Blur));
+                
+                // Add new blur filter
+                currentImage.filters.push(filter);
+                currentImage.applyFilters();
+                fabricCanvas.renderAll();
+            }
+        }
+
+        // Update glass blur
+        function updateGlassBlur(value) {
+            document.getElementById('glass-blur-value').textContent = `${value}px`;
+            updateGlassPreview();
+        }
+
+        // Update glass opacity
+        function updateGlassOpacity(value) {
+            document.getElementById('glass-opacity-value').textContent = `${value}%`;
+            updateGlassPreview();
+        }
+
+        // Update glass border
+        function updateGlassBorder(value) {
+            document.getElementById('glass-border-value').textContent = `${value}px`;
+            updateGlassPreview();
+        }
+
+        // Update glass preview
+        function updateGlassPreview() {
+            const blur = document.getElementById('glass-blur-slider').value;
+            const opacity = document.getElementById('glass-opacity-slider').value;
+            const border = document.getElementById('glass-border-slider').value;
+            const color = document.getElementById('glass-border-color').value;
+            
+            const preview = document.getElementById('glass-preview');
+            
+            preview.style.backdropFilter = `blur(${blur}px)`;
+            preview.style.webkitBackdropFilter = `blur(${blur}px)`;
+            preview.style.backgroundColor = `rgba(255, 255, 255, ${opacity / 100})`;
+            preview.style.border = `${border}px solid ${color}${Math.round(opacity * 2.55).toString(16).padStart(2, '0')}`;
+        }
+
+        // Apply direction effect
+        function applyDirectionEffect(direction) {
+            if (!currentImage) return;
+            
+            // Implementation would depend on the specific effect logic
+            showNotification(`Applied ${direction} transparency direction`, 'success');
+        }
+
+        // Apply preset
+        function applyPreset(preset) {
+            if (!currentImage) {
+                showNotification('Please load an image first', 'warning');
+                return;
+            }
+            
+            activePreset = preset;
+            
+            switch(preset) {
+                case 'ios':
+                    // iOS style preset
+                    updateTransparency(85);
+                    document.getElementById('transparency-slider').value = 85;
+                    
+                    updateBlur(15);
+                    document.getElementById('blur-slider').value = 15;
+                    
+                    switchTab('glass');
+                    document.getElementById('glass-blur-slider').value = 20;
+                    document.getElementById('glass-opacity-slider').value = 10;
+                    document.getElementById('glass-border-slider').value = 0.5;
+                    document.getElementById('glass-border-color').value = '#ffffff';
+                    updateGlassBlur(20);
+                    updateGlassOpacity(10);
+                    updateGlassBorder(0.5);
+                    break;
+                    
+                case 'material':
+                    // Material design preset
+                    updateTransparency(100);
+                    document.getElementById('transparency-slider').value = 100;
+                    
+                    // Add shadow filter
+                    if (currentImage) {
+                        const filter = new fabric.Image.filters.Shadow({
+                            color: 'rgba(0,0,0,0.3)',
+                            blur: 10,
+                            offsetX: 0,
+                            offsetY: 5
+                        });
+                        
+                        currentImage.filters = currentImage.filters || [];
+                        currentImage.filters = currentImage.filters.filter(f => !(f instanceof fabric.Image.filters.Shadow));
+                        currentImage.filters.push(filter);
+                        currentImage.applyFilters();
+                        fabricCanvas.renderAll();
+                    }
+                    break;
+                    
+                case 'glassmorphism':
+                    // Glassmorphism preset
+                    updateTransparency(75);
+                    document.getElementById('transparency-slider').value = 75;
+                    
+                    updateBlur(3);
+                    document.getElementById('blur-slider').value = 3;
+                    
+                    switchTab('glass');
+                    document.getElementById('glass-blur-slider').value = 15;
+                    document.getElementById('glass-opacity-slider').value = 15;
+                    document.getElementById('glass-border-slider').value = 1;
+                    document.getElementById('glass-border-color').value = '#ffffff';
+                    updateGlassBlur(15);
+                    updateGlassOpacity(15);
+                    updateGlassBorder(1);
+                    break;
+                    
+                case 'neumorphism':
+                    // Neumorphism preset
+                    updateTransparency(100);
+                    document.getElementById('transparency-slider').value = 100;
+                    
+                    // Add emboss filter
+                    if (currentImage) {
+                        const filter = new fabric.Image.filters.Convolute({
+                            matrix: [1, 1, 1, 1, 0.7, -1, -1, -1, -1]
+                        });
+                        
+                        currentImage.filters = currentImage.filters || [];
+                        currentImage.filters = currentImage.filters.filter(f => !(f instanceof fabric.Image.filters.Convolute));
+                        currentImage.filters.push(filter);
+                        currentImage.applyFilters();
+                        fabricCanvas.renderAll();
+                    }
+                    break;
+            }
+            
+            showNotification(`Applied ${preset} preset`, 'success');
+        }
+
+        // Show batch panel
+        function showBatchPanel() {
+            document.getElementById('file-upload').multiple = true;
+            document.getElementById('file-upload').click();
+        }
+
+        // Copy to clipboard
+        function copyToClipboard() {
+            if (!fabricCanvas) {
+                showNotification('Nothing to copy', 'warning');
+                return;
+            }
+            
+            fabricCanvas.getElement().toBlob(function(blob) {
+                try {
+                    const item = new ClipboardItem({ 'image/png': blob });
+                    navigator.clipboard.write([item]).then(function() {
+                        showNotification('Image copied to clipboard', 'success');
+                    }, function(error) {
+                        showNotification('Failed to copy: ' + error, 'error');
+                    });
+                } catch (err) {
+                    showNotification('Browser does not support clipboard API', 'error');
+                }
+            });
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notification-message');
+            const icon = notification.querySelector('i');
+            
+            notificationMessage.textContent = message;
+            
+            // Set icon and color based on type
+            if (type === 'success') {
+                icon.className = 'fas fa-check-circle';
+                icon.style.color = 'var(--success)';
+                notification.style.borderLeftColor = 'var(--success)';
+            } else if (type === 'warning') {
+                icon.className = 'fas fa-exclamation-triangle';
+                icon.style.color = 'var(--warning)';
+                notification.style.borderLeftColor = 'var(--warning)';
+            } else if (type === 'error') {
+                icon.className = 'fas fa-times-circle';
+                icon.style.color = 'var(--danger)';
+                notification.style.borderLeftColor = 'var(--danger)';
+            } else if (type === 'info') {
+                icon.className = 'fas fa-info-circle';
+                icon.style.color = 'var(--primary)';
+                notification.style.borderLeftColor = 'var(--primary)';
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // فعالية الأدوات المختلفة في الشريط الجانبي
+        function activateTool(toolType) {
+            // إزالة النشاط من جميع الأدوات
+            const toolButtons = document.querySelectorAll('.sidebar .tool-btn');
+            toolButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // تنشيط الأداة المختارة
+            const selectedButton = document.querySelector(`.sidebar .tool-btn[onclick*="${toolType}"]`);
+            if (selectedButton) {
+                selectedButton.classList.add('active');
+            }
+            
+            activeToolType = toolType;
+            
+            // تنفيذ إجراءات بناء على نوع الأداة
+            switch(toolType) {
+                case 'effects':
+                    showNotification('تم تفعيل أداة المؤثرات', 'info');
+                    break;
+                case 'crop':
+                    showNotification('تم تفعيل أداة القص', 'info');
+                    if (currentImage) {
+                        enableCropMode();
+                    } else {
+                        showNotification('يرجى تحميل صورة أولاً', 'warning');
+                    }
+                    break;
+                case 'adjust':
+                    showNotification('تم تفعيل أداة ضبط الصورة', 'info');
+                    break;
+                case 'layers':
+                    showNotification('تم تفعيل إدارة الطبقات', 'info');
+                    break;
+                case 'colors':
+                    showNotification('تم تفعيل أداة الألوان', 'info');
+                    break;
+                case 'shapes':
+                    showNotification('تم تفعيل أداة الأشكال', 'info');
+                    addShape();
+                    break;
+                case 'text':
+                    showNotification('تم تفعيل أداة النص', 'info');
+                    addText();
+                    break;
+                case 'batch':
+                    showNotification('تم تفعيل المعالجة الدفعية', 'info');
+                    showBatchPanel();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // دالة إضافة نص
+        function addText() {
+            if (!fabricCanvas) {
+                showNotification('يرجى تحميل صورة أولاً', 'warning');
+                return;
+            }
+            
+            const text = new fabric.IText('اكتب هنا...', {
+                left: 100,
+                top: 100,
+                fontFamily: 'Arial',
+                fontSize: 30,
+                fill: '#ffffff'
+            });
+            
+            fabricCanvas.add(text);
+            fabricCanvas.setActiveObject(text);
+            fabricCanvas.renderAll();
+            
+            showNotification('تم إضافة نص جديد', 'success');
+            
+            // حفظ الحالة للتراجع
+            saveStateToUndo();
+        }
+
+        // دالة إضافة شكل
+        function addShape() {
+            if (!fabricCanvas) {
+                showNotification('يرجى تحميل صورة أولاً', 'warning');
+                return;
+            }
+            
+            const shapes = ['rect', 'circle', 'triangle'];
+            const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+            let shape;
+            
+            switch(randomShape) {
+                case 'rect':
+                    shape = new fabric.Rect({
+                        left: 100,
+                        top: 100,
+                        width: 100,
+                        height: 100,
+                        fill: 'rgba(255, 0, 0, 0.5)'
+                    });
+                    break;
+                case 'circle':
+                    shape = new fabric.Circle({
+                        left: 100,
+                        top: 100,
+                        radius: 50,
+                        fill: 'rgba(0, 255, 0, 0.5)'
+                    });
+                    break;
+                case 'triangle':
+                    shape = new fabric.Triangle({
+                        left: 100,
+                        top: 100,
+                        width: 100,
+                        height: 100,
+                        fill: 'rgba(0, 0, 255, 0.5)'
+                    });
+                    break;
+            }
+            
+            fabricCanvas.add(shape);
+            fabricCanvas.setActiveObject(shape);
+            fabricCanvas.renderAll();
+            
+            showNotification(`تم إضافة شكل ${randomShape}`, 'success');
+            
+            // حفظ الحالة للتراجع
+            saveStateToUndo();
+        }
+
+        // وضع القص
+        function enableCropMode() {
+            if (!currentImage) return;
+            
+            const cropRect = new fabric.Rect({
+                left: currentImage.left,
+                top: currentImage.top,
+                width: currentImage.width * currentImage.scaleX * 0.8,
+                height: currentImage.height * currentImage.scaleY * 0.8,
+                fill: 'rgba(0,0,0,0.1)',
+                stroke: 'rgba(255,255,255,0.8)',
+                strokeWidth: 2,
+                strokeDashArray: [5, 5]
+            });
+            
+            fabricCanvas.add(cropRect);
+            fabricCanvas.setActiveObject(cropRect);
+            fabricCanvas.renderAll();
+            
+            showNotification('حدد منطقة القص ثم اضغط Enter', 'info');
+            
+            // إضافة مستمع للضغط على Enter لتنفيذ القص
+            const cropHandler = function(e) {
+                if (e.key === 'Enter') {
+                    applyCrop(cropRect);
+                    document.removeEventListener('keydown', cropHandler);
+                } else if (e.key === 'Escape') {
+                    fabricCanvas.remove(cropRect);
+                    fabricCanvas.renderAll();
+                    document.removeEventListener('keydown', cropHandler);
+                    showNotification('تم إلغاء القص', 'info');
+                }
+            };
+            
+            document.addEventListener('keydown', cropHandler);
+        }
+
+        // تطبيق القص
+        function applyCrop(cropRect) {
+            if (!currentImage || !cropRect) return;
+            
+            // حساب معلمات القص
+            const imgLeft = currentImage.left;
+            const imgTop = currentImage.top;
+            const imgWidth = currentImage.width * currentImage.scaleX;
+            const imgHeight = currentImage.height * currentImage.scaleY;
+            
+            // حساب مناطق القص النسبية
+            const cropX = (cropRect.left - imgLeft) / imgWidth;
+            const cropY = (cropRect.top - imgTop) / imgHeight;
+            const cropWidth = cropRect.width / imgWidth;
+            const cropHeight = cropRect.height / imgHeight;
+            
+            // إنشاء كائن القص
+            const clipPath = new fabric.Rect({
+                left: 0,
+                top: 0,
+                width: currentImage.width * cropWidth,
+                height: currentImage.height * cropHeight,
+                absolutePositioned: true
+            });
+            
+            // تطبيق القص على الصورة
+            currentImage.clipPath = clipPath;
+            
+            // تحديث موضع الصورة
+            currentImage.set({
+                left: cropRect.left,
+                top: cropRect.top,
+                scaleX: currentImage.scaleX,
+                scaleY: currentImage.scaleY
+            });
+            
+            // إزالة مستطيل القص
+            fabricCanvas.remove(cropRect);
+            fabricCanvas.renderAll();
+            
+            showNotification('تم تطبيق القص', 'success');
+            
+            // حفظ الحالة للتراجع
+            saveStateToUndo();
+        }
+
+        // زوم ان
+        function zoomIn() {
+            if (!fabricCanvas) return;
+            
+            zoomLevel *= 1.2;
+            fabricCanvas.setZoom(zoomLevel);
+            fabricCanvas.renderAll();
+            
+            showNotification(`تكبير: ${Math.round(zoomLevel * 100)}%`, 'info');
+        }
+
+        // زوم اوت
+        function zoomOut() {
+            if (!fabricCanvas) return;
+            
+            zoomLevel /= 1.2;
+            fabricCanvas.setZoom(zoomLevel);
+            fabricCanvas.renderAll();
+            
+            showNotification(`تصغير: ${Math.round(zoomLevel * 100)}%`, 'info');
+        }
+
+        // ملائمة للشاشة
+        function fitToScreen() {
+            if (!fabricCanvas || !currentImage) return;
+            
+            zoomLevel = 1;
+            fabricCanvas.setZoom(zoomLevel);
+            
+            // مركز الصورة في منتصف الكانفاس
+            fabricCanvas.viewportCenterObject(currentImage);
+            fabricCanvas.renderAll();
+            
+            showNotification('تم ضبط الصورة لتناسب الشاشة', 'info');
+        }
+
+        // تبديل ظهور الشبكة
+        function toggleGrid() {
+            isGridShown = !isGridShown;
+            
+            const canvasArea = document.querySelector('.canvas-area');
+            if (isGridShown) {
+                canvasArea.classList.add('grid-bg');
+                showNotification('تم إظهار الشبكة', 'info');
+            } else {
+                canvasArea.classList.remove('grid-bg');
+                showNotification('تم إخفاء الشبكة', 'info');
+            }
+        }
+
+        // تبديل ظهور المساطر
+        function toggleRulers() {
+            rulersVisible = !rulersVisible;
+            
+            // هنا يمكن إضافة كود لإظهار المساطر
+            showNotification(rulersVisible ? 'تم إظهار المساطر' : 'تم إخفاء المساطر', 'info');
+        }
+
+        // وظائف الحفظ والتحميل
+        function saveProject() {
+            if (!fabricCanvas || !currentImage) {
+                showNotification('لا يوجد مشروع للحفظ', 'warning');
+                return;
+            }
+            
+            const projectData = JSON.stringify(fabricCanvas);
+            localStorage.setItem('designcraft_project', projectData);
+            
+            showNotification('تم حفظ المشروع', 'success');
+        }
+
+        function newProject() {
+            if (fabricCanvas) {
+                fabricCanvas.clear();
+                document.getElementById('paste-area').style.display = 'block';
+                document.getElementById('canvas-container').style.display = 'none';
+            }
+            
+            showNotification('تم إنشاء مشروع جديد', 'success');
+            currentImage = null;
+        }
+
+        function openProject() {
+            const savedProject = localStorage.getItem('designcraft_project');
+            
+            if (savedProject) {
+                fabricCanvas.loadFromJSON(savedProject, function() {
+                    fabricCanvas.renderAll();
+                    
+                    // البحث عن عنصر الصورة
+                    fabricCanvas.getObjects().forEach(obj => {
+                        if (obj.type === 'image') {
+                            currentImage = obj;
+                        }
+                    });
+                    
+                    document.getElementById('paste-area').style.display = 'none';
+                    document.getElementById('canvas-container').style.display = 'block';
+                    
+                    showNotification('تم فتح المشروع', 'success');
+                });
+            } else {
+                showNotification('لا يوجد مشروع محفوظ', 'warning');
+            }
+        }
+
+        function exportProject() {
+            showNotification('جاري تحضير المشروع للتصدير...', 'info');
+            
+            // فتح نافذة اختيار التصدير
+            const exportPanel = document.querySelector('.panel-section:nth-child(4)');
+            exportPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function exitProject() {
+            if (confirm('هل تريد الخروج من المشروع؟ قد تفقد التغييرات غير المحفوظة')) {
+                newProject();
+            }
+        }
+
+        // وظائف القص والنسخ واللصق
+        function cutSelection() {
+            if (!fabricCanvas) return;
+            
+            const activeObject = fabricCanvas.getActiveObject();
+            if (!activeObject) {
+                showNotification('يرجى تحديد عنصر للقص', 'warning');
+                return;
+            }
+            
+            // نسخ العنصر إلى الحافظة
+            copySelection();
+            
+            // حذف العنصر
+            fabricCanvas.remove(activeObject);
+            fabricCanvas.renderAll();
+            
+            showNotification('تم قص العنصر المحدد', 'success');
+            
+            // حفظ الحالة للتراجع
+            saveStateToUndo();
+        }
+
+        function copySelection() {
+            if (!fabricCanvas) return;
+            
+            const activeObject = fabricCanvas.getActiveObject();
+            if (!activeObject) {
+                showNotification('يرجى تحديد عنصر للنسخ', 'warning');
+                return;
+            }
+            
+            // نسخ العنصر إلى متغير عام
+            activeObject.clone(function(cloned) {
+                window._clipboard = cloned;
+            });
+            
+            showNotification('تم نسخ العنصر المحدد', 'success');
+        }
+
+        function pasteSelection() {
+            if (!fabricCanvas || !window._clipboard) {
+                showNotification('لا يوجد عنصر في الحافظة', 'warning');
+                return;
+            }
+            
+            // لصق العنصر مع إزاحة قليلة
+            window._clipboard.clone(function(cloned) {
+                cloned.set({
+                    left: cloned.left + 10,
+                    top: cloned.top + 10,
+                    evented: true
+                });
+                
+                fabricCanvas.add(cloned);
+                fabricCanvas.setActiveObject(cloned);
+                fabricCanvas.renderAll();
+                
+                showNotification('تم لصق العنصر', 'success');
+                
+                // حفظ الحالة للتراجع
+                saveStateToUndo();
+            });
+        }
+
+        // وظائف التراجع والإعادة
+        function saveStateToUndo() {
+            if (!fabricCanvas) return;
+            
+            const json = JSON.stringify(fabricCanvas);
+            undoStack.push(json);
+            
+            // تحديد الحد الأقصى لعدد الخطوات
+            if (undoStack.length > 10) {
+                undoStack.shift();
+            }
+            
+            // مسح مكدس الإعادة عند كل إجراء جديد
+            redoStack = [];
+        }
+
+        function undoAction() {
+            if (!fabricCanvas || undoStack.length === 0) {
+                showNotification('لا يمكن التراجع أكثر', 'warning');
+                return;
+            }
+            
+            // حفظ الحالة الحالية للإعادة
+            const currentState = JSON.stringify(fabricCanvas);
+            redoStack.push(currentState);
+            
+            // استعادة الحالة السابقة
+            const prevState = undoStack.pop();
+            fabricCanvas.loadFromJSON(prevState, function() {
+                fabricCanvas.renderAll();
+                
+                // تحديث المتغير العالمي للصورة
+                fabricCanvas.getObjects().forEach(obj => {
+                    if (obj.type === 'image') {
+                        currentImage = obj;
+                    }
+                });
+                
+                showNotification('تم التراجع', 'info');
+            });
+        }
+
+        function redoAction() {
+            if (!fabricCanvas || redoStack.length === 0) {
+                showNotification('لا يمكن الإعادة أكثر', 'warning');
+                return;
+            }
+            
+            // حفظ الحالة الحالية للتراجع
+            const currentState = JSON.stringify(fabricCanvas);
+            undoStack.push(currentState);
+            
+            // استعادة الحالة التالية
+            const nextState = redoStack.pop();
+            fabricCanvas.loadFromJSON(nextState, function() {
+                fabricCanvas.renderAll();
+                
+                // تحديث المتغير العالمي للصورة
+                fabricCanvas.getObjects().forEach(obj => {
+                    if (obj.type === 'image') {
+                        currentImage = obj;
+                    }
+                });
+                
+                showNotification('تم الإعادة', 'info');
+            });
+        }
+
+        // مشاركة المشروع
+        function shareProject() {
+            if (!fabricCanvas || !currentImage) {
+                showNotification('يرجى تحميل صورة أولاً', 'warning');
+                return;
+            }
+            
+            showNotification('جاري تحضير المشروع للمشاركة...', 'info');
+            
+            // محاكاة إنشاء رابط مشاركة
+            setTimeout(() => {
+                const shareUrl = 'https://designcraft.example.com/share/' + Math.random().toString(36).substring(2, 10);
+                
+                // محاكاة نسخ الرابط إلى الحافظة
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    showNotification('تم نسخ رابط المشاركة إلى الحافظة', 'success');
+                }).catch(() => {
+                    showNotification(`رابط المشاركة: ${shareUrl}`, 'info');
+                });
+            }, 1000);
+        }
+
+        // عرض المساعدة
+        function showHelp() {
+            alert(`دليل استخدام DesignCraft:
+            
+1. تحميل صورة: اسحب وأفلت صورة، أو انقر على زر "تحميل صورة"، أو الصق من الحافظة
+2. المؤثرات: استخدم علامات التبويب للتبديل بين أنواع التأثيرات المختلفة
+3. الإجراءات الشائعة:
+   - قص/نسخ/لصق: استخدم قائمة "تحرير"
+   - حفظ/فتح: استخدم قائمة "ملف"
+   - تكبير/تصغير: استخدم قائمة "عرض"
+4. الأدوات:
+   - الأشكال: إضافة أشكال هندسية
+   - النص: إضافة نص قابل للتحرير
+   - القص: اقتصاص جزء من الصورة
+   - الطبقات: إدارة طبقات المشروع
+5. التصدير: حفظ المشروع بتنسيقات مختلفة أو نسخ إلى الحافظة`);
+        }
+
+        // عرض الإعدادات
+        function showSettings() {
+            showNotification('جاري تحميل الإعدادات...', 'info');
+            
+            // هنا يمكن تنفيذ كود لإظهار نافذة الإعدادات
+        }
+
+        // تصدير الصورة
+        function exportImage(format) {
+            if (!fabricCanvas || !currentImage) {
+                showNotification('يرجى تحميل صورة أولاً', 'warning');
+                return;
+            }
+            
+            let dataURL;
+            
+            switch(format) {
+                case 'png':
+                    dataURL = fabricCanvas.toDataURL({ format: 'png' });
+                    break;
+                case 'jpg':
+                    dataURL = fabricCanvas.toDataURL({ format: 'jpeg', quality: 0.9 });
+                    break;
+                case 'svg':
+                    // تصدير SVG (قد لا يحتوي على صور نقطية)
+                    dataURL = fabricCanvas.toSVG();
+                    break;
+                case 'webp':
+                    dataURL = fabricCanvas.toDataURL({ format: 'webp' });
+                    break;
+                default:
+                    dataURL = fabricCanvas.toDataURL();
+            }
+            
+            // إنشاء رابط تنزيل
+            const link = document.createElement('a');
+            
+            if (format === 'svg') {
+                const blob = new Blob([dataURL], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                link.href = url;
+                link.download = `designcraft-export.${format}`;
+            } else {
+                link.href = dataURL;
+                link.download = `designcraft-export.${format}`;
+            }
+            
+            // تنفيذ التنزيل
+            link.click();
+            
+            showNotification(`تم تصدير الصورة بتنسيق ${format.toUpperCase()}`, 'success');
+        }
+    </script>
+</body>
+</html>
