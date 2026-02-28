@@ -1,13 +1,50 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>مؤثرات سريعة لتعديل الصور</title>
+    <title>ImageFX - مؤثرات سريعة لتعديل الصور</title>
+    <meta http-equiv="refresh" content="0; url=https://imgfx.netlify.app/" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #0a0a0a;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        text-align: center;
+      }
+      .loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255,255,255,0.1);
+        border-top-color: #7c3aed;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      p { color: #999; font-size: 14px; }
+      a { color: #7c3aed; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="loader">
+      <div class="spinner"></div>
+      <p>جاري التحويل...</p>
+      <p><a href="https://imgfx.netlify.app/">اضغط هنا إذا لم يتم التحويل تلقائياً</a></p>
+    </div>
+    <script>
+      window.location.replace("https://imgfx.netlify.app/");
+    </script>
   </body>
 </html>
